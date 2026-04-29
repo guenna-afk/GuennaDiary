@@ -1,7 +1,7 @@
 # GuennaDiary
 
 ```
-alt!(banner.png)
+![Alt](banner.png)
 
 ```
 ## ✦ Vista general
