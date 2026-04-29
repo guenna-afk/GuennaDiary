@@ -1,9 +1,7 @@
 # GuennaDiary
 
-```
 ![Alt](banner.png)
 
-```
 ## ✦ Vista general
 
 ```
