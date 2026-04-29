@@ -247,14 +247,14 @@ function renderTodayTasks() {
 }
 
 // ── BACKLOG ─────────────────────────────────
-let activeFilter = 'all';
+let activeFilter = null;
 
 function renderBacklog() {
   const list = document.getElementById('backlogList');
   list.innerHTML = '';
 
   let items = [...state.backlog].filter(t => !t.done);
-  if (activeFilter !== 'all') items = items.filter(t => t.category === activeFilter);
+  if (activeFilter) items = items.filter(t => t.category === activeFilter);
 
   if (!items.length) {
     list.innerHTML = '<div class="empty-state"><div class="empty-icon">◻</div>Sin pendientes</div>';
@@ -297,9 +297,19 @@ function renderBacklog() {
 function setupFilters() {
   document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      activeFilter = btn.dataset.filter;
+      const filterValue = btn.dataset.filter;
+      
+      // Si el botón ya está activo, desactivarlo y mostrar todas
+      if (btn.classList.contains('active')) {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        activeFilter = null;
+      } else {
+        // Activar este botón y desactivar los demás
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeFilter = filterValue;
+      }
+      
       renderBacklog();
     });
   });
