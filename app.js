@@ -15,7 +15,7 @@ let calYear, calMonth;
 function defaultState() {
   return {
     todayTasks: [],     // [{ id, name, time?, done }]
-    backlog: [],        // [{ id, name, priority, done, note? }]
+    backlog: [],        // [{ id, name, category, done, note? }]
     calEvents: {},      // { "YYYY-MM-DD": [{ id, name, time? }] }
   };
 }
@@ -56,15 +56,25 @@ document.addEventListener('DOMContentLoaded', () => {
   calYear  = now.getFullYear();
   calMonth = now.getMonth();
 
+  // Show intro, then fade to agenda after 3.2 seconds
+  setTimeout(() => {
+    document.getElementById('intro').classList.add('hidden');
+    initAgenda();
+  }, 3200);
+});
+
+function initAgenda() {
   startClock();
   renderTodayMeta();
   renderCalendar();
   renderTodayTasks();
   renderBacklog();
+  renderCompletedTasks();
   setupButtons();
   setupFilters();
   setupModal();
-});
+  setupCompletedToggle();
+}
 
 // ── CLOCK ───────────────────────────────────
 function startClock() {
@@ -195,22 +205,24 @@ function renderTodayTasks() {
   const list = document.getElementById('todayTasksList');
   list.innerHTML = '';
 
-  if (!state.todayTasks.length) {
+  // Only show incomplete tasks
+  const incomplete = state.todayTasks.filter(t => !t.done);
+
+  if (!incomplete.length) {
     list.innerHTML = '<div class="empty-state"><div class="empty-icon">◻</div>Sin tareas para hoy</div>';
     return;
   }
 
-  // Sort: undone first, then by time
-  const sorted = [...state.todayTasks].sort((a, b) => {
-    if (a.done !== b.done) return a.done ? 1 : -1;
+  // Sort by time
+  const sorted = [...incomplete].sort((a, b) => {
     return (a.time || '99:99').localeCompare(b.time || '99:99');
   });
 
   sorted.forEach(task => {
     const item = document.createElement('div');
-    item.className = 'task-item' + (task.done ? ' done' : '');
+    item.className = 'task-item';
     item.innerHTML = `
-      <input type="checkbox" class="task-check" ${task.done ? 'checked' : ''} data-id="${task.id}">
+      <input type="checkbox" class="task-check" data-id="${task.id}">
       <div class="task-body">
         <span class="task-name">${esc(task.name)}</span>
         <div class="task-meta">
@@ -222,12 +234,12 @@ function renderTodayTasks() {
 
     item.querySelector('.task-check').onchange = (e) => {
       const t = state.todayTasks.find(t => t.id === e.target.dataset.id);
-      if (t) { t.done = e.target.checked; save(); renderTodayTasks(); }
+      if (t) { t.done = e.target.checked; save(); renderTodayTasks(); renderCompletedTasks(); }
     };
 
     item.querySelector('.task-delete').onclick = (e) => {
       state.todayTasks = state.todayTasks.filter(t => t.id !== e.target.dataset.id);
-      save(); renderTodayTasks();
+      save(); renderTodayTasks(); renderCompletedTasks();
     };
 
     list.appendChild(item);
@@ -241,29 +253,27 @@ function renderBacklog() {
   const list = document.getElementById('backlogList');
   list.innerHTML = '';
 
-  let items = [...state.backlog];
-  if (activeFilter !== 'all') items = items.filter(t => t.priority === activeFilter);
+  let items = [...state.backlog].filter(t => !t.done);
+  if (activeFilter !== 'all') items = items.filter(t => t.category === activeFilter);
 
   if (!items.length) {
     list.innerHTML = '<div class="empty-state"><div class="empty-icon">◻</div>Sin pendientes</div>';
     return;
   }
 
-  const prioOrder = { alta: 0, media: 1, baja: 2, '': 3 };
   items.sort((a, b) => {
-    if (a.done !== b.done) return a.done ? 1 : -1;
-    return (prioOrder[a.priority] ?? 3) - (prioOrder[b.priority] ?? 3);
+    return (a.category ?? '').localeCompare(b.category ?? '');
   });
 
   items.forEach(task => {
     const item = document.createElement('div');
-    item.className = 'task-item' + (task.done ? ' done' : '');
+    item.className = 'task-item';
     item.innerHTML = `
-      <input type="checkbox" class="task-check" ${task.done ? 'checked' : ''} data-id="${task.id}">
+      <input type="checkbox" class="task-check" data-id="${task.id}">
       <div class="task-body">
         <span class="task-name">${esc(task.name)}</span>
         <div class="task-meta">
-          ${task.priority ? `<span class="task-prio prio-${task.priority}">${task.priority}</span>` : ''}
+          ${task.category ? `<span class="task-prio prio-${task.category.toLowerCase()}">${task.category}</span>` : ''}
           ${task.note ? `<span class="task-time">${esc(task.note)}</span>` : ''}
         </div>
       </div>
@@ -272,12 +282,12 @@ function renderBacklog() {
 
     item.querySelector('.task-check').onchange = (e) => {
       const t = state.backlog.find(t => t.id === e.target.dataset.id);
-      if (t) { t.done = e.target.checked; save(); renderBacklog(); }
+      if (t) { t.done = e.target.checked; save(); renderBacklog(); renderCompletedTasks(); }
     };
 
     item.querySelector('.task-delete').onclick = (e) => {
       state.backlog = state.backlog.filter(t => t.id !== e.target.dataset.id);
-      save(); renderBacklog();
+      save(); renderBacklog(); renderCompletedTasks();
     };
 
     list.appendChild(item);
@@ -350,15 +360,15 @@ function setupButtons() {
   document.getElementById('addBacklogTask').onclick = () => {
     openModal('NUEVO PENDIENTE', [
       { name: 'name', label: 'Tarea', type: 'text', placeholder: 'Describe la tarea...' },
-      { name: 'priority', label: 'Prioridad', type: 'select',
-        options: [{ v: '', l: 'Sin prioridad' }, { v: 'alta', l: 'Alta' }, { v: 'media', l: 'Media' }, { v: 'baja', l: 'Baja' }] },
+      { name: 'category', label: 'Categoría', type: 'select',
+        options: [{ v: '', l: 'Sin categoría' }, { v: 'Emprendimiento', l: 'Emprendimiento' }, { v: 'Académico', l: 'Académico' }, { v: 'Coding', l: 'Coding' }] },
       { name: 'note', label: 'Nota (opcional)', type: 'text', placeholder: 'Contexto, link, etc.' },
     ], fields => {
       if (!fields.name.trim()) return;
       state.backlog.push({
         id: uid(),
         name: fields.name.trim(),
-        priority: fields.priority || '',
+        category: fields.category || '',
         note: fields.note?.trim() || '',
         done: false,
       });
@@ -440,6 +450,71 @@ function setupModal() {
       }
     }
   });
+}
+
+// ── COMPLETED TASKS PANEL ───────────────────
+function renderCompletedTasks() {
+  const completed = [
+    ...state.todayTasks.filter(t => t.done),
+    ...state.backlog.filter(t => t.done)
+  ];
+
+  document.getElementById('completedCount').textContent = completed.length;
+
+  const list = document.getElementById('completedList');
+  list.innerHTML = '';
+
+  if (!completed.length) return;
+
+  completed.forEach(task => {
+    const item = document.createElement('div');
+    item.className = 'completed-item';
+    const isTodayTask = state.todayTasks.some(t => t.id === task.id);
+    item.innerHTML = `
+      <span class="completed-item-name">${esc(task.name)}</span>
+      <span class="completed-item-meta">${task.category || task.time || '—'}</span>
+      <button class="completed-restore" data-id="${task.id}" data-type="${isTodayTask ? 'today' : 'backlog'}">↺</button>
+    `;
+    
+    item.querySelector('.completed-restore').onclick = (e) => {
+      const id = e.target.dataset.id;
+      const type = e.target.dataset.type;
+      
+      if (type === 'today') {
+        const t = state.todayTasks.find(t => t.id === id);
+        if (t) t.done = false;
+        renderTodayTasks();
+      } else {
+        const t = state.backlog.find(t => t.id === id);
+        if (t) t.done = false;
+        renderBacklog();
+      }
+      save();
+      renderCompletedTasks();
+    };
+    list.appendChild(item);
+  });
+}
+
+function setupCompletedToggle() {
+  const toggle = document.getElementById('completedToggle');
+  const panel = document.querySelector('.completed-panel');
+  const list = document.getElementById('completedList');
+  const clearBtn = document.getElementById('completedClear');
+
+  toggle.onclick = () => {
+    panel.classList.toggle('open');
+    list.classList.toggle('hidden');
+  };
+
+  clearBtn.onclick = () => {
+    if (confirm('¿Estás seguro de que quieres eliminar todas las tareas completadas?')) {
+      state.todayTasks = state.todayTasks.filter(t => !t.done);
+      state.backlog = state.backlog.filter(t => !t.done);
+      save();
+      renderCompletedTasks();
+    }
+  };
 }
 
 // ── UTILS ───────────────────────────────────
