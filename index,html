@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Agenda — Guenna</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Zen+Kaku+Gothic+New:wght@300;400;700;900&family=Noto+Serif+JP:wght@300;400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="agenda.css"/>
+</head>
+<body>
+
+  <!-- NOISE OVERLAY -->
+  <div class="noise"></div>
+
+  <!-- HEADER -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <span class="brand">GUENNA</span>
+      <span class="brand-sep">///</span>
+      <span class="brand-sub">AGENDA</span>
+    </div>
+    <div class="topbar-clock" id="clock">00:00:00</div>
+    <div class="topbar-right">
+      <span class="today-label" id="todayLabel">—</span>
+    </div>
+  </header>
+
+  <!-- MAIN LAYOUT -->
+  <main class="layout">
+
+    <!-- ── LEFT: CALENDAR ─────────────────── -->
+    <aside class="panel panel-calendar">
+      <div class="panel-label">CALENDARIO</div>
+
+      <div class="cal-nav">
+        <button class="cal-arrow" id="prevMonth">&#8592;</button>
+        <span class="cal-title" id="calTitle">—</span>
+        <button class="cal-arrow" id="nextMonth">&#8594;</button>
+      </div>
+
+      <div class="cal-grid">
+        <div class="cal-dow">L</div>
+        <div class="cal-dow">M</div>
+        <div class="cal-dow">X</div>
+        <div class="cal-dow">J</div>
+        <div class="cal-dow">V</div>
+        <div class="cal-dow">S</div>
+        <div class="cal-dow">D</div>
+        <div id="calDays"></div>
+      </div>
+
+      <!-- Selected day events -->
+      <div class="cal-events-section">
+        <div class="section-label" id="selDayLabel">Selecciona un día</div>
+        <div id="calEvents" class="cal-events-list"></div>
+        <button class="btn-ghost-small" id="addCalEvent">+ evento</button>
+      </div>
+    </aside>
+
+    <!-- ── RIGHT PANEL ─────────────────────── -->
+    <div class="panel-right">
+
+      <!-- TOP RIGHT: TODAY TASKS -->
+      <div class="panel panel-today">
+        <div class="panel-label">HOY</div>
+        <div class="today-date-block">
+          <span class="today-day-num" id="todayDayNum">—</span>
+          <div class="today-meta">
+            <span class="today-weekday" id="todayWeekday">—</span>
+            <span class="today-monthyear" id="todayMonthYear">—</span>
+          </div>
+        </div>
+
+        <div class="tasks-scroll" id="todayTasksList"></div>
+
+        <button class="btn-add-task" id="addTodayTask">
+          <span class="plus">+</span> AÑADIR TAREA DE HOY
+        </button>
+      </div>
+
+      <!-- BOTTOM RIGHT: BACKLOG -->
+      <div class="panel panel-backlog">
+        <div class="panel-label">PENDIENTES</div>
+
+        <div class="backlog-filters">
+          <button class="filter-btn active" data-filter="all">Todo</button>
+          <button class="filter-btn" data-filter="alta">Alta</button>
+          <button class="filter-btn" data-filter="media">Media</button>
+          <button class="filter-btn" data-filter="baja">Baja</button>
+        </div>
+
+        <div class="tasks-scroll" id="backlogList"></div>
+
+        <button class="btn-add-task" id="addBacklogTask">
+          <span class="plus">+</span> AÑADIR PENDIENTE
+        </button>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- MODAL -->
+  <div id="modal" class="modal hidden">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="modalTitle">Añadir</h3>
+        <button class="modal-close" id="modalClose">×</button>
+      </div>
+      <div id="modalFields"></div>
+      <div class="modal-footer">
+        <button class="btn-cancel" id="modalCancel">Cancelar</button>
+        <button class="btn-save" id="modalSave">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="agenda.js"></script>
+</body>
+</html>
