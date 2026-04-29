@@ -6,12 +6,21 @@
   <title>Agenda — Guenna</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Zen+Kaku+Gothic+New:wght@300;400;700;900&family=Noto+Serif+JP:wght@300;400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="agenda.css"/>
+  <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
 
   <!-- NOISE OVERLAY -->
   <div class="noise"></div>
+
+  <!-- INTRO/SPLASH SCREEN -->
+  <div id="intro" class="intro">
+    <div class="intro-content"> 
+      <div class="intro-text intro-main">GUENNA</div>
+      <div class="intro-text intro-sub">MADE BY GUENNA</div>
+      <div class="intro-line"></div>
+    </div>
+  </div>
 
   <!-- HEADER -->
   <header class="topbar">
@@ -85,9 +94,9 @@
 
         <div class="backlog-filters">
           <button class="filter-btn active" data-filter="all">Todo</button>
-          <button class="filter-btn" data-filter="alta">Alta</button>
-          <button class="filter-btn" data-filter="media">Media</button>
-          <button class="filter-btn" data-filter="baja">Baja</button>
+          <button class="filter-btn" data-filter="emprendimiento">Emprendimiento</button>
+          <button class="filter-btn" data-filter="academico">Académico</button>
+          <button class="filter-btn" data-filter="coding">Coding</button>
         </div>
 
         <div class="tasks-scroll" id="backlogList"></div>
@@ -99,6 +108,18 @@
 
     </div>
   </main>
+
+  <!-- COMPLETED PANEL (COLLAPSED) -->
+  <div class="completed-panel">
+    <div class="completed-header">
+      <button class="completed-toggle" id="completedToggle">
+        <span class="toggle-arrow">▼</span>
+        <span class="completed-count" id="completedCount">0</span> Completadas
+      </button>
+      <button class="completed-clear" id="completedClear" title="Limpiar completadas">🗑</button>
+    </div>
+    <div class="completed-list hidden" id="completedList"></div>
+  </div>
 
   <!-- MODAL -->
   <div id="modal" class="modal hidden">
@@ -115,6 +136,6 @@
     </div>
   </div>
 
-  <script src="agenda.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
